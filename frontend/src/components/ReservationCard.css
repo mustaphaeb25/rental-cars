@@ -1,0 +1,149 @@
+/* src/components/NewReservationCard.css */
+.new-reservation-card {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.new-reservation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.new-reservation-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.new-reservation-card h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.new-reservation-card .status-badge {
+    padding: 0.3em 0.7em;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.new-reservation-card .status-badge.approved {
+    color: var(--success-color);
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.new-reservation-card .status-badge.rejected {
+    color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.new-reservation-card .status-badge.pending {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* New Card Content Layout */
+.card-content {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.card-image-container {
+    flex-shrink: 0;
+    width: 120px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--background-color);
+}
+
+.reservation-car-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.new-reservation-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.new-reservation-card .card-body p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color-light);
+    font-size: 0.95rem;
+}
+
+.total-price {
+    font-weight: 600;
+    color: var(--primary-color) !important;
+}
+
+.new-reservation-card .card-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .card-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .card-image-container {
+        width: 100%;
+        height: 150px;
+    }
+}
+
+/* User Info Section (Admin only) */
+.user-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+.user-info-section .divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0.5rem 0;
+    width: 100%;
+}
+
+.user-info-section h5 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.user-info-section p {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

@@ -1,0 +1,360 @@
+/* src/components/NewNavbar.css */
+:root {
+  --navbar-height: 70px;
+  --navbar-bg-light: rgba(255, 255, 255, 0.8);
+  --navbar-bg-dark: rgba(26, 32, 44, 0.8);
+  --navbar-blur: 12px;
+  --navbar-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --primary-color-rgb: 37, 99, 235;
+  /* Example blue, adjust if you have global vars */
+}
+
+.new-navbar {
+  background-color: var(--navbar-bg-light);
+  backdrop-filter: blur(var(--navbar-blur));
+  -webkit-backdrop-filter: blur(var(--navbar-blur));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--navbar-shadow);
+  height: var(--navbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  padding: 0 1.5rem;
+}
+
+.new-navbar.dark {
+  background-color: var(--navbar-bg-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navbar-container {
+  width: 100%;
+  max-width: 1280px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* --- Brand --- */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--primary-color);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.02);
+}
+
+.navbar-brand h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-icon {
+  font-size: 2rem;
+  color: var(--primary-color);
+  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
+}
+
+/* --- Nav Links --- */
+.navbar-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.6rem 1rem;
+  border-radius: 50px;
+  /* Pill shape */
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-link span {
+  position: relative;
+  z-index: 1;
+}
+
+.nav-link svg {
+  font-size: 1.1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.nav-link:hover svg,
+.nav-link.active svg {
+  opacity: 1;
+}
+
+.nav-link:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.05);
+  /* Subtle background on hover */
+  color: var(--primary-color);
+}
+
+.nav-link.active {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary-color);
+}
+
+/* --- Actions --- */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.theme-toggle,
+.menu-toggle {
+  background: transparent;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover,
+.menu-toggle:hover {
+  background-color: var(--surface-color-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+/* Auth Buttons */
+.navbar-actions .auth-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navbar-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  color: var(--text-color);
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  color: var(--primary-color);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);
+}
+
+/* --- User Dropdown --- */
+.user-menu {
+  position: relative;
+}
+
+.custom-dropdown-toggle {
+  background: transparent;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--text-color);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-toggle:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 220px;
+  background-color: var(--surface-color);
+  border: 1px solid rgba(156, 163, 175, 0.1);
+  border-radius: 16px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+.custom-dropdown-menu.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.custom-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-dropdown-item:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.05);
+  /* Fix this var usage */
+  color: var(--primary-color);
+}
+
+/* Divider */
+.custom-dropdown-divider {
+  height: 1px;
+  background-color: rgba(156, 163, 175, 0.15);
+  margin: 0.5rem 0;
+}
+
+/* --- Mobile Responsiveness --- */
+.menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: flex;
+  }
+
+  .navbar-nav {
+    position: fixed;
+    top: var(--navbar-height);
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: var(--surface-color);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2rem 1.5rem;
+    gap: 1rem;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .new-navbar.dark .navbar-nav {
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .navbar-nav.open {
+    transform: translateX(0);
+  }
+
+  .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 12px;
+    font-size: 1.05rem;
+  }
+
+  /* When menu is open, maybe blur content behind? 
+     Ideally we'd have a backdrop overlay, 
+     but keeping it simple with CSS only matches current structure */
+}
+
+.mobile-auth-buttons {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 1rem;
+}
+
+.new-navbar.dark .mobile-auth-buttons {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+  .mobile-auth-buttons {
+    display: flex;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .navbar-actions .auth-buttons span {
+    display: none;
+    /* Hide text on small screens if needed, or keep buttons stacked */
+  }
+
+  .navbar-actions .auth-buttons {
+    display: none;
+    /* Often cleaner to move auth into the side menu on mobile, 
+                        but for now let's just keep them or hide text depending on space. 
+                        Actually, previous CSS concealed them. I'll stick to that 
+                        and assume they should be inside the nav menu if hidden here. 
+                        Looking at the JSX, they are NOT in the nav menu list. 
+                        I should probably move them in JSX for better mobile UX. 
+                        For this step, I will hide them here and handle 'moving' in JSX step. */
+  }
+}

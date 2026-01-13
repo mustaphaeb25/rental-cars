@@ -1,76 +1,93 @@
 import React from 'react';
-import { Card, Button } from 'react-bootstrap';
-import { IoCarOutline } from "react-icons/io5";
-import { MdDateRange } from "react-icons/md";
+import { translateStatus } from '../utils/statusTranslator';
+import { FaCheck, FaTimes, FaCalendarAlt, FaCar, FaUser, FaEnvelope } from 'react-icons/fa';
+import { useTheme } from '../contexts/ThemeContext';
+import { makeAbsoluteImageUrl } from '../utils/imageUtils';
+import './ReservationCard.css';
 
-const ReservationCard = ({ reservation, carDetails, isAdminView = false, onUpdateStatus, onDeleteReservation }) => {
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'en attente':
-        return <span className="badge bg-warning text-dark">Pending</span>;
-      case 'validée':
-        return <span className="badge bg-success">Approved</span>;
-      case 'refusée':
-        return <span className="badge bg-danger">Rejected</span>;
-      default:
-        return <span className="badge bg-secondary">{status}</span>;
+const ReservationCard = ({ reservation, carDetails, onDeleteReservation, isAdminView, onUpdateStatus }) => {
+  const { darkMode } = useTheme();
+
+  const formattedStartDate = new Date(reservation.date_début).toLocaleDateString();
+  const formattedEndDate = new Date(reservation.date_fin).toLocaleDateString();
+
+  const imageUrl = carDetails ? (makeAbsoluteImageUrl(carDetails.image_url) || 'https://via.placeholder.com/300x200?text=No+Image') : 'https://via.placeholder.com/300x200?text=No+Image';
+
+  const getStatusClass = (status) => {
+    switch (status.toLowerCase()) {
+      case 'validée': return 'approved';
+      case 'annulée':
+      case 'refusée': return 'rejected';
+      case 'en attente': return 'pending';
+      default: return '';
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const calculateTotal = () => {
+    if (!carDetails) return 'N/A';
+    const start = new Date(reservation.date_début);
+    const end = new Date(reservation.date_fin);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return (days * carDetails.prix_par_jour).toFixed(2);
   };
 
   return (
-    <Card className="mb-3 shadow-sm fade-in">
-      <Card.Body>
-        <Card.Title className="d-flex align-items-center">
-          <IoCarOutline className="me-2" />
-          {carDetails ? `${carDetails.marque} ${carDetails.modele}` : 'Car Details Not Available'}
-        </Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">Reservation ID: {reservation.id}</Card.Subtitle>
-        <Card.Text className="d-flex align-items-center">
-          <MdDateRange className="me-2" />
-          <strong>Dates:</strong> {formatDate(reservation.date_debut)} to {formatDate(reservation.date_fin)}
-        </Card.Text>
-        <Card.Text>
-          <strong>Status:</strong> {getStatusBadge(reservation.statut)}
-        </Card.Text>
+    <div className={`new-reservation-card ${darkMode ? 'dark' : ''}`}>
+      <div className="card-header">
+        <h4>{carDetails ? `${carDetails.marque} ${carDetails.modele}` : 'Car Not Found'}</h4>
+        <span className={`status-badge ${getStatusClass(reservation.statut)}`}>
+          {translateStatus(reservation.statut)}
+        </span>
+      </div>
 
-        {isAdminView && (
-          <div className="mt-3">
-            <p><strong>User ID:</strong> {reservation.id_utilisateur}</p>
-            <p><strong>Car ID:</strong> {reservation.id_voiture}</p>
-            {reservation.statut === 'en attente' && (
-              <>
-                <Button variant="success" size="sm" className="me-2" onClick={() => onUpdateStatus(reservation.id, 'validée')}>
-                  Approve
-                </Button>
-                <Button variant="danger" size="sm" onClick={() => onUpdateStatus(reservation.id, 'refusée')}>
-                  Reject
-                </Button>
-              </>
-            )}
-            {/* Optionally allow deletion for admins */}
-            {/* <Button variant="outline-danger" size="sm" className="ms-auto" onClick={() => onDeleteReservation(reservation.id)}>
-              Delete Reservation
-            </Button> */}
-          </div>
-        )}
+      <div className="card-content">
+        <div className="card-image-container">
+          <img
+            src={imageUrl}
+            alt={carDetails ? `${carDetails.marque} ${carDetails.modele}` : 'Car'}
+            className="reservation-car-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+            }}
+          />
+        </div>
 
-        {!isAdminView && reservation.statut === 'en attente' && (
-          <div className="mt-3">
-            <Button variant="outline-danger" size="sm" onClick={() => onDeleteReservation(reservation.id)}>
-              Cancel Reservation
-            </Button>
+        <div className="card-body">
+          <div className="reservation-details">
+            <p><FaCalendarAlt /> From: {formattedStartDate} To: {formattedEndDate}</p>
+            {carDetails && <p className="total-price">Total: ${calculateTotal()}</p>}
           </div>
-        )}
-      </Card.Body>
-    </Card>
+
+          {isAdminView && (
+            <div className="user-info-section">
+              <div className="divider"></div>
+              <h5>User Information</h5>
+              <p><FaUser /> {reservation.user_nom || 'N/A'}</p>
+              <p><FaEnvelope /> {reservation.user_email || 'N/A'}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isAdminView && reservation.statut === 'en attente' && (
+        <div className="card-actions">
+          <button className="btn btn-success" onClick={() => onUpdateStatus(reservation.id, 'validée')}>
+            <FaCheck /> Approve
+          </button>
+          <button className="btn btn-danger" onClick={() => onUpdateStatus(reservation.id, 'refusée')}>
+            <FaTimes /> Reject
+          </button>
+        </div>
+      )}
+      {!isAdminView && reservation.statut === 'en attente' && (
+        <div className="card-actions">
+          <button className="btn btn-danger" onClick={() => onDeleteReservation(reservation)}>
+            Cancel Reservation
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,28 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Alert, Form } from 'react-bootstrap';
-import ReservationCard from '../components/ReservationCard';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import Modal from '../components/Modal';
 import { getReservations, updateReservationStatus, getCars } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
+import { translateStatus } from '../utils/statusTranslator';
+import { FaArrowLeft, FaFilter, FaCalendarAlt } from 'react-icons/fa';
+import './ManageReservationsPage.css';
+import ReservationCard from '../components/ReservationCard';
 
 const ManageReservationsPage = () => {
   const { isAdmin, loading: authLoading } = useAuth();
+  const { darkMode } = useTheme();
   const navigate = useNavigate();
 
   const [reservations, setReservations] = useState([]);
-  const [filteredReservations, setFilteredReservations] = useState([]);
-  const [cars, setCars] = useState({}); // To map car details to reservations
+  const [cars, setCars] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(''); // Filter for reservation status
+  const [statusFilter, setStatusFilter] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
 
-  // Redirect if not an admin
+  const stats = {
+    total: reservations.length,
+    pending: reservations.filter((r) => r.statut === 'en attente').length,
+    approved: reservations.filter((r) => r.statut === 'validée').length,
+    rejected: reservations.filter((r) => r.statut === 'refusée').length,
+    cancelled: reservations.filter((r) => r.statut === 'annulée').length,
+  };
+  
   useEffect(() => {
     if (!authLoading && !isAdmin) {
-      navigate('/admin'); // Redirect to admin dashboard if not authorized
+      navigate('/admin');
     }
   }, [authLoading, isAdmin, navigate]);
 
@@ -30,106 +39,101 @@ const ManageReservationsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      setUpdateMessage('');
-
-      // Fetch all cars first to map them by ID for easy lookup
-      const carsResponse = await getCars(); // Get all cars, not just available
+      
+      const carsResponse = await getCars();
       const carsMap = carsResponse.data.reduce((acc, car) => {
         acc[car.id] = car;
         return acc;
       }, {});
       setCars(carsMap);
-
-      // Fetch all reservations
+      
       const reservationsResponse = await getReservations();
       setReservations(reservationsResponse.data);
-      setFilteredReservations(reservationsResponse.data); // Initialize filtered list
     } catch (err) {
-      setError("Failed to fetch reservations or car data. Please try again.");
-      console.error("Error fetching admin data:", err);
+      setError('Failed to fetch data.');
     } finally {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     if (isAdmin) {
       fetchReservationsAndCars();
     }
   }, [isAdmin]);
 
-  useEffect(() => {
-    let currentReservations = [...reservations];
-    if (statusFilter) {
-      currentReservations = currentReservations.filter(res => res.statut.toLowerCase() === statusFilter.toLowerCase());
-    }
-    setFilteredReservations(currentReservations);
-  }, [statusFilter, reservations]);
-
   const handleUpdateStatus = async (reservationId, newStatus) => {
     try {
-      setUpdateMessage('');
       await updateReservationStatus(reservationId, newStatus);
-      setUpdateMessage(`Reservation ${reservationId} status updated to ${newStatus} successfully!`);
-      fetchReservationsAndCars(); // Re-fetch to get latest data
+      setUpdateMessage(`Reservation updated to ${newStatus}.`);
+      fetchReservationsAndCars();
     } catch (err) {
-      setUpdateMessage('Failed to update reservation status. Please try again.');
-      console.error("Error updating reservation status:", err);
+      setUpdateMessage('Failed to update reservation.');
     } finally {
-      setTimeout(() => setUpdateMessage(''), 3000); // Clear message after 3 seconds
+        setTimeout(() => setUpdateMessage(''), 3000);
     }
   };
 
-  if (authLoading || !isAdmin) {
-    return <LoadingSpinner />;
-  }
+  const filteredReservations = statusFilter
+    ? reservations.filter(r => r.statut === statusFilter)
+    : reservations;
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error) {
-    return <Alert variant="danger" className="text-center my-5">{error}</Alert>;
-  }
+  if (authLoading || loading) return <div className="spinner-container"><LoadingSpinner /></div>;
 
   return (
-    <Container className="my-5">
-      <h1 className="text-center mb-4">Manage Reservations</h1>
+    <div className={`new-manage-reservations-page ${darkMode ? 'dark' : 'light'}`}>
+      <div className="container">
+        <header className="page-header">
+          <h1>Manage Reservations</h1>
+          <p>Review and manage all booking requests.</p>
+        </header>
 
-      <Row className="mb-4">
-        <Col md={4}>
-          <Form.Group controlId="statusFilter">
-            <Form.Label>Filter by Status:</Form.Label>
-            <Form.Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All Statuses</option>
-              <option value="en attente">Pending</option>
-              <option value="validée">Approved</option>
-              <option value="refusée">Rejected</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-      </Row>
+        <div className="toolbar">
+          <button className="btn btn-secondary" onClick={() => navigate('/admin')}><FaArrowLeft /> Dashboard</button>
+        </div>
 
-      {updateMessage && <Alert variant={updateMessage.includes('successfully') ? 'success' : 'danger'}>{updateMessage}</Alert>}
+        <div className="stats-grid">
+          <div className="stat-card"><h3>{stats.total}</h3><p>Total</p></div>
+          <div className="stat-card"><h3>{stats.pending}</h3><p>Pending</p></div>
+          <div className="stat-card"><h3>{stats.approved}</h3><p>Approved</p></div>
+          <div className="stat-card"><h3>{stats.rejected}</h3><p>Rejected</p></div>
+          <div className="stat-card"><h3>{stats.cancelled}</h3><p>Cancelled</p></div>
+        </div>
 
-      {filteredReservations.length === 0 ? (
-        <Alert variant="info" className="text-center">No reservations found matching your criteria.</Alert>
-      ) : (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {filteredReservations.map((reservation) => (
-            <Col key={reservation.id}>
+        <div className="filter-controls">
+          <label htmlFor="status-filter"><FaFilter /> Filter by status</label>
+          <select id="status-filter" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+            <option value="">All</option>
+            <option value="en attente">Pending</option>
+            <option value="validée">Approved</option>
+            <option value="refusée">Rejected</option>
+            <option value="annulée">Cancelled</option>
+          </select>
+        </div>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+        {updateMessage && <div className="alert alert-success">{updateMessage}</div>}
+
+        <div className="reservations-list">
+          {filteredReservations.length > 0 ? (
+            filteredReservations.map(res => (
               <ReservationCard
-                reservation={reservation}
-                carDetails={cars[reservation.id_voiture]}
+                key={res.id}
+                reservation={res}
+                carDetails={cars[res.id_voiture]}
                 isAdminView={true}
                 onUpdateStatus={handleUpdateStatus}
-                // onDeleteReservation for admin if needed (not explicitly requested but could be added)
               />
-            </Col>
-          ))}
-        </Row>
-      )}
-    </Container>
+            ))
+          ) : (
+            <div className="no-results-card">
+              <FaCalendarAlt />
+              <p>No reservations found for the selected status.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

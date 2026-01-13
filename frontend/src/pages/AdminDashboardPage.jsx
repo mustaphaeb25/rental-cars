@@ -1,64 +1,84 @@
 import React from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FaCar, FaClipboardList, FaChartLine } from 'react-icons/fa';
+import { useTheme } from '../contexts/ThemeContext';
+import { 
+  FaCar, FaClipboardList, FaEnvelope, FaChartLine, FaUserCog, FaCog 
+} from 'react-icons/fa';
+import './AdminDashboardPage.css';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+const AdminCard = ({ to, icon, title, description, disabled }) => {
+  const { darkMode } = useTheme();
+  return (
+    <Link to={to} className={`admin-card ${darkMode ? 'dark' : 'light'} ${disabled ? 'disabled' : ''}`}>
+      <div className="card-icon">{icon}</div>
+      <div className="card-content">
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+    </Link>
+  );
+};
 
 const AdminDashboardPage = () => {
-  const { user, isAuthenticated, isAdmin, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { darkMode } = useTheme();
 
-  // Redirect if not authenticated or not an admin
   if (authLoading) {
-    return null; // Or a loading spinner for auth check
-  }
-  if (!isAuthenticated || !isAdmin) {
-    navigate('/'); // Redirect to home or login if not authorized
-    return null;
+    return <div className="spinner-container"><LoadingSpinner /></div>;
   }
 
   return (
-    <Container className="my-5 fade-in">
-      <h1 className="text-center mb-4">Admin Dashboard</h1>
-      <p className="text-center text-muted">Welcome, {user?.nom|| user?.email}!</p>
+    <div className={`new-admin-dashboard-page ${darkMode ? 'dark' : 'light'}`}>
+      <div className="container">
+        <header className="dashboard-header">
+          <h1>Admin Dashboard</h1>
+          <p>Welcome, {user?.name || 'Admin'}!</p>
+        </header>
 
-      <Row xs={1} md={2} lg={3} className="g-4 mt-4">
-        <Col>
-          <Card className="h-100 shadow-sm hover-grow text-center">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center">
-              <FaCar size={60} className="text-primary mb-3" />
-              <Card.Title className="h4">Manage Cars</Card.Title>
-              <Card.Text>Add, edit, or delete car listings.</Card.Text>
-              <Button as={Link} to="/admin/manage-cars" variant="primary" className="mt-auto">Go to Cars</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card className="h-100 shadow-sm hover-grow text-center">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center">
-              <FaClipboardList size={60} className="text-success mb-3" />
-              <Card.Title className="h4">Manage Reservations</Card.Title>
-              <Card.Text>View, approve, or reject car reservations.</Card.Text>
-              <Button as={Link} to="/admin/manage-reservations" variant="success" className="mt-auto">Go to Reservations</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        
-        <Col>
-          <Card className="h-100 shadow-sm hover-grow text-center">
-            <Card.Body className="d-flex flex-column justify-content-center align-items-center">
-              <FaChartLine size={60} className="text-info mb-3" />
-              <Card.Title className="h4">Reports & Analytics</Card.Title>
-              <Card.Text>View platform statistics and reports (Future Feature).</Card.Text>
-              <Button variant="info" disabled className="mt-auto">Coming Soon</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-        
-      </Row>
-      
-    </Container>
+        <div className="dashboard-grid">
+          <AdminCard
+            to="/admin/manage-cars"
+            icon={<FaCar />}
+            title="Manage Cars"
+            description="Add, edit, or remove car listings."
+          />
+          <AdminCard
+            to="/admin/manage-reservations"
+            icon={<FaClipboardList />}
+            title="Manage Reservations"
+            description="View and manage all user reservations."
+          />
+          <AdminCard
+            to="/admin/messages"
+            icon={<FaEnvelope />}
+            title="Contact Messages"
+            description="Read and reply to user inquiries."
+          />
+          <AdminCard
+            to="/admin/analytics"
+            icon={<FaChartLine />}
+            title="Analytics"
+            description="View platform statistics and reports."
+          />
+          <AdminCard
+            to="/admin/manage-users"
+            icon={<FaUserCog />}
+            title="User Management"
+            description="Manage user accounts and roles."
+            disabled
+          />
+          <AdminCard
+            to="/admin/settings"
+            icon={<FaCog />}
+            title="Settings"
+            description="Configure application settings."
+            disabled
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 

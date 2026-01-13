@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Row, Col, Alert, Image } from 'react-bootstrap';
-import LoadingSpinner from './LoadingSpinner';
+// import LoadingSpinner from './LoadingSpinner';
+import LoadingSpinner from '../components/LoadingSpinner';
+import './CarForm.css';
 
 const CarForm = ({ onSubmit, initialData = {}, loading, error, success }) => {
   const [formData, setFormData] = useState({
@@ -10,7 +11,6 @@ const CarForm = ({ onSubmit, initialData = {}, loading, error, success }) => {
     prix_par_jour: '',
     description: '',
     image: null,
-    
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [validationError, setValidationError] = useState('');
@@ -23,10 +23,10 @@ const CarForm = ({ onSubmit, initialData = {}, loading, error, success }) => {
         statut: initialData.statut || '',
         prix_par_jour: initialData.prix_par_jour || '',
         description: initialData.description || '',
-        image: null, // Image input should be reset for edit, user can re-upload
+        image: null,
       });
       if (initialData.image_url) {
-        setImagePreview(`http://localhost:3000/uploads/${initialData.image_url}`);
+        setImagePreview(`http://localhost:3000${initialData.image_url}`);
       } else {
         setImagePreview(null);
       }
@@ -43,9 +43,6 @@ const CarForm = ({ onSubmit, initialData = {}, loading, error, success }) => {
     if (file) {
       setFormData((prev) => ({ ...prev, image: file }));
       setImagePreview(URL.createObjectURL(file));
-    } else {
-      setFormData((prev) => ({ ...prev, image: null }));
-      setImagePreview(initialData.image_url ? `http://localhost:3000/uploads/${initialData.image_url}` : null);
     }
   };
 
@@ -58,124 +55,60 @@ const CarForm = ({ onSubmit, initialData = {}, loading, error, success }) => {
       return;
     }
 
-    if (isNaN(formData.prix_par_jour) || parseFloat(formData.prix_par_jour) <= 0) {
-      setValidationError('Price per day must be a positive number.');
-      return;
-    }
-
     const data = new FormData();
-    data.append('marque', formData.marque);
-    data.append('modele', formData.modele);
-    data.append('statut', formData.statut);
-    data.append('prix_par_jour', formData.prix_par_jour);
-    data.append('description', formData.description);
-    if (formData.image) {
-      data.append('image', formData.image);
-    }
+    Object.keys(formData).forEach(key => {
+        if (formData[key] !== null) {
+            data.append(key, formData[key]);
+        }
+    });
 
     onSubmit(data);
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
-      {validationError && <Alert variant="danger">{validationError}</Alert>}
-      {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
+    <form className="new-car-form" onSubmit={handleSubmit}>
+      {validationError && <div className="alert alert-danger">{validationError}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formMarque">
-            <Form.Label>Brand</Form.Label>
-            <Form.Control
-              type="text"
-              name="marque"
-              value={formData.marque}
-              onChange={handleChange}
-              placeholder="Enter car brand"
-              required
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formModele">
-            <Form.Label>Model</Form.Label>
-            <Form.Control
-              type="text"
-              name="modele"
-              value={formData.modele}
-              onChange={handleChange}
-              placeholder="Enter car model"
-              required
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+      <div className="form-grid">
+        <div className="form-group">
+          <label htmlFor="marque">Brand</label>
+          <input type="text" id="marque" name="marque" value={formData.marque} onChange={handleChange} required />
+        </div>
+        <div className="form-group">
+          <label htmlFor="modele">Model</label>
+          <input type="text" id="modele" name="modele" value={formData.modele} onChange={handleChange} required />
+        </div>
+        <div className="form-group">
+          <label htmlFor="prix_par_jour">Price per Day</label>
+          <input type="number" id="prix_par_jour" name="prix_par_jour" value={formData.prix_par_jour} onChange={handleChange} required />
+        </div>
+        <div className="form-group">
+          <label htmlFor="statut">Status</label>
+          <select id="statut" name="statut" value={formData.statut} onChange={handleChange}>
+            <option value="disponible">Available</option>
+            <option value="réservée">Reserved</option>
+            <option value="en maintenance">Maintenance</option>
+          </select>
+        </div>
+      </div>
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} required></textarea>
+      </div>
+      <div className="form-group">
+        <label htmlFor="image">Car Image</label>
+        <input type="file" id="image" name="image" onChange={handleFileChange} />
+        {imagePreview && <img src={imagePreview} alt="Preview" className="image-preview" />}
+      </div>
 
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formPrixParJour">
-            <Form.Label>Price per Day ($)</Form.Label>
-            <Form.Control
-              type="number"
-              name="prix_par_jour"
-              value={formData.prix_par_jour}
-              onChange={handleChange}
-              placeholder="Enter price per day"
-              step="0.01"
-              required
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3" controlId="formStatut">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              name="statut"
-              value={formData.statut}
-              onChange={handleChange}
-            >
-              <option value="disponible">Available</option>
-              <option value="réservée ">Rented</option>
-              <option value="en maintenance">In Maintenance</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-      </Row>
-
-      <Form.Group className="mb-3" controlId="formDescription">
-        <Form.Label>Description</Form.Label>
-        <Form.Control
-          as="textarea"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={3}
-          placeholder="Enter car description"
-          required
-        />
-      </Form.Group>
-
-      <Form.Group className="mb-3" controlId="formImage">
-        <Form.Label>Car Image</Form.Label>
-        <Form.Control
-          type="file"
-          name="image"
-          accept="image/jpeg, image/jpg, image/jfif, image/png"
-          onChange={handleFileChange}
-        />
-        {imagePreview && (
-          <div className="mt-3">
-            <p>Image Preview:</p>
-            <Image src={imagePreview} thumbnail style={{ maxWidth: '200px', maxHeight: '200px' }} />
-          </div>
-        )}
-      </Form.Group>
-
-      <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-        {loading ? 'Saving...' : (initialData ? 'Update Car' : 'Add Car')}
-      </Button>
-    </Form>
+      <button type="submit" className="btn btn-primary" disabled={loading}>
+        {loading ? <LoadingSpinner size="sm" /> : (initialData.id ? 'Update Car' : 'Add Car')}
+      </button>
+    </form>
   );
 };
 
 export default CarForm;
+

@@ -1,0 +1,77 @@
+
+.new-admin-dashboard-page {
+  padding: 3rem 1rem;
+}
+
+.new-admin-dashboard-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2.8rem;
+  color: var(--primary-color);
+}
+
+.dashboard-header p {
+  font-size: 1.2rem;
+  color: var(--text-color-light);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.admin-card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.admin-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  color: var(--primary-color);
+}
+
+.admin-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-card.disabled:hover {
+  transform: none;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+}
+
+.admin-card .card-icon {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.admin-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-card p {
+  color: var(--text-color-light);
+  flex-grow: 1;
+}

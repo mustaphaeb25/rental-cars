@@ -1,104 +1,114 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Table, Spinner, Alert, Card, Button } from 'react-bootstrap';
-import { getContactMessages } from '../services/api'; // Import the new API function
-import { format } from 'date-fns'; // For better date formatting (install if needed: npm install date-fns)
+import { useNavigate } from 'react-router-dom';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Modal from '../components/Modal';
+import { getContactMessages, deleteContactMessage } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { format } from 'date-fns';
+import { FaArrowLeft, FaEnvelope, FaTrash } from 'react-icons/fa';
+import './AdminContactMessagesPage.css';
 
 const AdminContactMessagesPage = () => {
+  const { isAdmin, loading: authLoading } = useAuth();
+  const { darkMode } = useTheme();
+  const navigate = useNavigate();
+
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const response = await getContactMessages();
-        setMessages(response.data);
-      } catch (err) {
-        console.error('Failed to fetch contact messages:', err);
-        setError('Failed to load messages. Please ensure you are logged in as an admin and try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!authLoading && !isAdmin) {
+      navigate('/admin');
+    }
+  }, [authLoading, isAdmin, navigate]);
 
-    fetchMessages();
-  }, []); // Empty dependency array means this runs once on component mount
-
-  const handleDeleteMessage = (messageId) => {
-    // TODO: Implement actual delete functionality later if needed
-    // For now, this is a placeholder. You'd need a backend DELETE endpoint too.
-    if (window.confirm(`Are you sure you want to delete message ID: ${messageId}?`)) {
-      console.log(`Attempting to delete message ID: ${messageId}`);
-      // In a real app, you would make an API call:
-      // api.delete(`/contact/${messageId}`)
-      // .then(() => {
-      //   setMessages(messages.filter(msg => msg.id !== messageId));
-      //   alert('Message deleted successfully!');
-      // })
-      // .catch(err => console.error('Error deleting message:', err));
-      alert('Delete functionality is not yet implemented on the backend.');
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await getContactMessages();
+      setMessages(response.data);
+    } catch (err) {
+      setError('Failed to load messages.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (isAdmin) {
+      fetchMessages();
+    }
+  }, [isAdmin]);
+
+  const handleDelete = (messageId) => {
+    setSelectedMessage(messageId);
+    setShowDeleteModal(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!selectedMessage) return;
+    try {
+      await deleteContactMessage(selectedMessage);
+      fetchMessages();
+    } catch (err) {
+      setError('Failed to delete message.');
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return <div className="spinner-container"><LoadingSpinner /></div>;
+  }
+
   return (
-    <Container className="my-5">
-      <h2 className="text-center mb-4">Contact Messages</h2>
+    <div className={`new-admin-contact-page ${darkMode ? 'dark' : 'light'}`}>
+      <div className="container">
+        <header className="page-header">
+          <h1>Contact Messages</h1>
+          <p>Review and manage customer inquiries.</p>
+        </header>
 
-      {loading && (
-        <div className="text-center">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading messages...</span>
-          </Spinner>
+        <div className="toolbar">
+          <button className="btn btn-secondary" onClick={() => navigate('/admin')}>
+            <FaArrowLeft /> Dashboard
+          </button>
         </div>
-      )}
 
-      {error && <Alert variant="danger">{error}</Alert>}
+        {error && <div className="alert alert-danger">{error}</div>}
 
-      {!loading && !error && messages.length === 0 && (
-        <Alert variant="info" className="text-center">No contact messages found.</Alert>
-      )}
-
-      {!loading && !error && messages.length > 0 && (
-        <Card className="shadow-sm">
-          <Card.Body>
-            <Table striped bordered hover responsive className="mb-0">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Subject</th>
-                  <th>Message</th>
-                  <th>Received On</th>
-                  {/* <th>Actions</th> // Uncomment if you add delete functionality */}
-                </tr>
-              </thead>
-              <tbody>
-                {messages.map((message) => (
-                  <tr key={message.id}>
-                    <td>{message.id}</td>
-                    <td>{message.name}</td>
-                    <td>{message.email}</td>
-                    <td>{message.subject}</td>
-                    <td>{message.message}</td>
-                    <td>
-                      {message.created_at ? format(new Date(message.created_at), 'PPPp') : 'N/A'}
-                    </td>
-                    {/* <td>
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteMessage(message.id)}>
-                        Delete
-                      </Button>
-                    </td> */}
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </Card.Body>
-        </Card>
-      )}
-    </Container>
+        <div className="messages-list">
+          {messages.length > 0 ? (
+            messages.map(msg => (
+              <div key={msg.id} className="message-item">
+                <div className="message-item-header">
+                  <div>
+                    <strong>{msg.name}</strong> ({msg.email})
+                  </div>
+                  <span>{format(new Date(msg.created_at), 'PPPp')}</span>
+                </div>
+                <h4>{msg.subject}</h4>
+                <p>{msg.message}</p>
+                <div className="message-actions">
+                    <button className="btn-icon btn-danger" onClick={() => handleDelete(msg.id)}><FaTrash /></button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No messages found.</p>
+          )}
+        </div>
+      </div>
+      
+      <Modal show={showDeleteModal} handleClose={() => setShowDeleteModal(false)} title="Confirm Deletion" onConfirm={confirmDelete}>
+          <p>Are you sure you want to delete this message? This cannot be undone.</p>
+      </Modal>
+    </div>
   );
 };
 

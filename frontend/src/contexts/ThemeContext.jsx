@@ -10,11 +10,14 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    // Apply or remove dark-mode class on body
+    // Apply dark-mode class to the root HTML element
+    const htmlElement = document.documentElement;
     if (darkMode) {
-      document.body.classList.add('dark-mode');
+      htmlElement.classList.add('dark-mode');
+      htmlElement.setAttribute('data-theme', 'dark');
     } else {
-      document.body.classList.remove('dark-mode');
+      htmlElement.classList.remove('dark-mode');
+      htmlElement.setAttribute('data-theme', 'light');
     }
     // Save theme preference to local storage
     localStorage.setItem('theme', JSON.stringify(darkMode));

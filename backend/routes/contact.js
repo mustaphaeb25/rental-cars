@@ -1,31 +1,47 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../data/db'); // Assuming db.js is in data folder
+const db = require('../data/db');
 
-router.post('/contact', (req, res) => {
-  const { name, email, subject, message } = req.body;
+router.use(express.json());
 
-  if (!name || !email || !subject || !message) {
-    return res.status(400).json({ error: 'All fields are required.' });
-  }
-
-  const sql = 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
-  db.query(sql, [name, email, subject, message], (err, result) => {
-    if (err) {
-      console.error('Error saving contact message:', err);
-      return res.status(500).json({ error: 'Failed to send message. Please try again later.' });
-    }
-    res.status(201).json({ message: 'Message sent successfully!', messageId: result.insertId });
-  });
-});
-router.get('/contact', (req, res) => { // You might add authenticateToken middleware here: router.get('/contact', authenticateToken, (req, res) => {
-  const sql = 'SELECT * FROM contact_messages ORDER BY created_at DESC'; // Order by newest first
+router.get('/', (req, res) => {
+  const sql = 'SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC';
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching contact messages:', err);
-      return res.status(500).json({ error: 'Failed to retrieve messages.' });
+      return res.status(500).json({ error: 'Database error' });
     }
     res.json(results);
+  });
+});
+
+
+router.post('/', (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Missing required fields: name, email, message' });
+  }
+  const sql = 'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)';
+  db.query(sql, [name, email, subject || null, message], (err, result) => {
+    if (err) {
+      console.error('Error saving contact message:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ message: 'Contact message saved', id: result.insertId });
+  });
+});
+
+// DELETE /:id - delete a contact message
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'DELETE FROM contact_messages WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting contact message:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json({ message: 'Contact message deleted' });
   });
 });
 

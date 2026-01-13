@@ -3,7 +3,7 @@ import { Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 const CarCard = ({ car, showActions = true, isAdminView = false, onDelete, onEdit }) => {
-  const imageUrl = car.image_url ? `http://localhost:3000/uploads/${car.image_url}` : 'https://via.placeholder.com/150?text=No+Image';
+  const imageUrl = car.image_url ? `http://localhost:3000${car.image_url}` : 'https://via.placeholder.com/150?text=No+Image';
 
   return (
     <Card className="h-100 shadow-sm hover-grow fade-in">

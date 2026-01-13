@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Form, InputGroup, FormControl, Button, Alert } from 'react-bootstrap';
-import CarCard from '../components/CarCard';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { Link } from 'react-router-dom';
 import { getCars } from '../services/api';
-import { FaSearch } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { makeAbsoluteImageUrl } from '../utils/imageUtils';
+// import { FaSearch, FaFilter, FaSortAmountDown, FaTimes, FaCar } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaSortAmountDown, FaTimes, FaCar, FaArrowRight } from 'react-icons/fa';
+import { useTheme } from '../contexts/ThemeContext';
+import './CarListingPage.css';
 
 const CarListingPage = () => {
   const [cars, setCars] = useState([]);
@@ -12,8 +15,9 @@ const CarListingPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [filterPrice, setFilterPrice] = useState(''); // Max price
+  const [filterPrice, setFilterPrice] = useState('');
+  const [sortOption, setSortOption] = useState('default');
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -21,114 +25,126 @@ const CarListingPage = () => {
         setLoading(true);
         const response = await getCars();
         setCars(response.data);
-        setFilteredCars(response.data); // Initialize filtered cars with all cars
+        setFilteredCars(response.data);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch car listings. Please try again later.");
         setLoading(false);
-        console.error("Error fetching cars:", err);
       }
     };
     fetchCars();
   }, []);
 
   useEffect(() => {
-    // Apply filters and search whenever dependencies change
     let currentCars = [...cars];
 
-    // Search by brand or model
     if (searchTerm) {
       currentCars = currentCars.filter(car =>
         car.marque.toLowerCase().includes(searchTerm.toLowerCase()) ||
         car.modele.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    // Filter by brand
     if (filterBrand) {
       currentCars = currentCars.filter(car => car.marque.toLowerCase() === filterBrand.toLowerCase());
     }
-
-    // Filter by status
-    if (filterStatus) {
-      currentCars = currentCars.filter(car => car.statut.toLowerCase() === filterStatus.toLowerCase());
-    }
-
-    // Filter by price
     if (filterPrice) {
       currentCars = currentCars.filter(car => car.prix_par_jour <= parseFloat(filterPrice));
     }
 
-    setFilteredCars(currentCars);
-  }, [searchTerm, filterBrand, filterStatus, filterPrice, cars]);
+    switch (sortOption) {
+      case 'price-asc':
+        currentCars.sort((a, b) => a.prix_par_jour - b.prix_par_jour);
+        break;
+      case 'price-desc':
+        currentCars.sort((a, b) => b.prix_par_jour - a.prix_par_jour);
+        break;
+      case 'newest':
+        currentCars.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        break;
+      default:
+        break;
+    }
 
-  // Extract unique brands for filter dropdown
+    setFilteredCars(currentCars);
+  }, [searchTerm, filterBrand, filterPrice, sortOption, cars]);
+
   const uniqueBrands = [...new Set(cars.map(car => car.marque))];
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterBrand('');
+    setFilterPrice('');
+    setSortOption('default');
+  };
+  
   return (
-    <Container className="my-5">
-      <h1 className="text-center mb-4">Available Cars</h1>
+    <div className={`new-car-listing-page ${darkMode ? 'dark' : 'light'}`}>
+      <div className="page-header">
+        <div className="container">
+          <h1>Our Fleet</h1>
+          <p>Choose from our wide selection of premium vehicles.</p>
+        </div>
+      </div>
+      <div className="container">
+        <div className="filters-container">
+          <div className="filter-group">
+            <label htmlFor="search"><FaSearch /> Search</label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Search for a car..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="brand"><FaFilter /> Brand</label>
+            <select id="brand" value={filterBrand} onChange={e => setFilterBrand(e.target.value)}>
+              <option value="">All Brands</option>
+              {uniqueBrands.map(brand => (
+                <option key={brand} value={brand.toLowerCase()}>{brand}</option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="price"><FaSortAmountDown /> Max Price</label>
+            <input
+              id="price"
+              type="range"
+              min="0"
+              max="1000"
+              value={filterPrice}
+              onChange={e => setFilterPrice(e.target.value)}
+            />
+            <span>${filterPrice || '1000'}</span>
+          </div>
+          <button onClick={clearFilters} className="btn btn-secondary">
+            <FaTimes /> Clear
+          </button>
+        </div>
 
-      {/* Search and Filter Bar */}
-      <Row className="mb-4 fade-in">
-        <Col md={12}>
-          <Form className="p-3 shadow-sm rounded bg-light">
-            <Row className="g-3">
-              <Col md={6}>
-                <InputGroup>
-                  <InputGroup.Text><FaSearch /></InputGroup.Text>
-                  <FormControl
-                    placeholder="Search by brand or model..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </InputGroup>
-              </Col>
-              <Col md={2}>
-                <Form.Select value={filterBrand} onChange={(e) => setFilterBrand(e.target.value)}>
-                  <option value="">All Brands</option>
-                  {uniqueBrands.map((brand, index) => (
-                    <option key={index} value={brand}>{brand}</option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col md={2}>
-                <Form.Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                  <option value="">All Statuses</option>
-                  <option value="disponible">Available</option>
-                  <option value="louee">Rented</option>
-                  <option value="en_maintenance">In Maintenance</option>
-                </Form.Select>
-              </Col>
-              <Col md={2}>
-                <FormControl
-                  type="number"
-                  placeholder="Max Price"
-                  value={filterPrice}
-                  onChange={(e) => setFilterPrice(e.target.value)}
-                />
-              </Col>
-            </Row>
-          </Form>
-        </Col>
-      </Row>
-
-      {loading ? (
-        <LoadingSpinner />
-      ) : error ? (
-        <Alert variant="danger" className="text-center">{error}</Alert>
-      ) : filteredCars.length === 0 ? (
-        <Alert variant="info" className="text-center">No cars found matching your criteria.</Alert>
-      ) : (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {filteredCars.map((car) => (
-            <Col key={car.id}>
-              <CarCard car={car} />
-            </Col>
-          ))}
-        </Row>
-      )}
-    </Container>
+        <div className="cars-grid">
+          {loading ? (
+            <LoadingSpinner />
+          ) : error ? (
+            <p className="error">{error}</p>
+          ) : (
+            filteredCars.map(car => (
+              <div key={car.id} className="car-card">
+                <img src={makeAbsoluteImageUrl(car.image_url)} alt={`${car.marque} ${car.modele}`} className="car-image" />
+                <div className="car-details">
+                  <h3>{car.marque} {car.modele}</h3>
+                  <p className="price">${car.prix_par_jour} / day</p>
+                  <Link to={`/cars/${car.id}`} className="btn btn-primary">
+                    View Details <FaArrowRight />
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
